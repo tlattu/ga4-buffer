@@ -202,8 +202,6 @@
         After <strong>2 seconds</strong> of no activity (click/move/key/scroll),
         a <code>view_promotion</code> event is sent for the buffered modules.
         Each module is included at most once across all view events.
-        Positions (<code>horizontal_position</code>, <code>vertical_position</code>) are
-        calculated dynamically from the layout when the module is first viewed.
       </p>
 
       <!-- Big module -->
@@ -640,6 +638,26 @@
 
     window.addEventListener('pagehide', flushOnHideOrUnload);
 
+    // --- INTENT TO LEAVE (EXIT INTENT) --------------------------------------
+
+    let lastMouseY = null;
+    let exitIntentFired = false;
+
+    document.addEventListener('mousemove', function (e) {
+      if (lastMouseY !== null) {
+        var goingUp = e.clientY < lastMouseY;
+        // Near top & moving up
+        if (!exitIntentFired && goingUp && e.clientY <= 5) {
+          exitIntentFired = true;
+          // Flush buffer on exit intent
+          flushOnHideOrUnload();
+          // Optional: reset after some time if you want to allow another exit intent later
+          setTimeout(function () { exitIntentFired = false; }, 5000);
+        }
+      }
+      lastMouseY = e.clientY;
+    }, { passive: true });
+
     // --- DYNAMIC POSITION CALCULATION ----------------------------------------
 
     function assignDynamicPositions() {
@@ -717,22 +735,17 @@
       selectBtn.addEventListener('click', function () {
         var id = card.getAttribute('data-module-id');
 
-        // Ensure positions
         if (!card.dataset.horizontalPosition || !card.dataset.verticalPosition) {
           assignDynamicPositions();
         }
         var h = Number(card.dataset.horizontalPosition || 0);
         var v = Number(card.dataset.verticalPosition || 0);
 
-        // If not yet viewed, force-add to buffer so we always have a matching view_promotion
         if (!bufferIds.has(id) && !sentIds.has(id)) {
           addModuleToBufferFromCard(card);
         }
 
-        // Flush current buffer (so this click's module is in the latest view_promotion)
         sendViewPromotionFromBuffer();
-
-        // Then send select_promotion
         sendSelectPromotion(id, h, v);
       });
     });
