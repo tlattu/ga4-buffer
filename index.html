@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Buffered GA view_promotion Demo – Debug Scroll Activity</title>
+  <title>Buffered GA view_promotion Demo – Dynamic Positions & Carousel</title>
   <style>
     * {
       box-sizing: border-box;
@@ -150,13 +150,6 @@
       margin-bottom: 4px;
     }
 
-    .spacer-text {
-      font-size: 14px;
-      color: #555;
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
     .buffer-panel {
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -201,21 +194,19 @@
 </head>
 <body>
   <div class="container">
-    <!-- LEFT PANE: Modules -->
+    <!-- LEFT PANE -->
     <div class="left" id="leftPane">
       <h1>Buffered GA view_promotion Demo</h1>
       <p>
-        Modules are buffered when they are at least 80% visible in this pane (or, for the carousel,
-        within the carousel viewport). After <strong>2 seconds</strong> of no activity
-        (click/move/key/scroll), a <code>view_promotion</code> event is sent for the buffered
-        modules. Each module is included at most once across all view events.
+        Modules are buffered when they are at least 80% visible in this pane.
+        After <strong>2 seconds</strong> of no activity (click/move/key/scroll),
+        a <code>view_promotion</code> event is sent for the buffered modules.
+        Each module is included at most once across all view events.
         Positions (<code>horizontal_position</code>, <code>vertical_position</code>) are
         calculated dynamically from the layout when the module is first viewed.
-        Debug fields (<code>buffer_index</code>, <code>buffer_size_at_add</code>, <code>batch_id</code>, <code>batch_size</code>)
-        are added to each item to help inspect buffer behavior.
       </p>
 
-      <!-- 1 big element -->
+      <!-- Big module -->
       <div class="module-section">
         <h2>Big Module</h2>
         <p class="section-desc">One large hero‑style module.</p>
@@ -225,13 +216,11 @@
           <div class="module-title">Hero Banner</div>
           <div class="module-meta">ID: module_hero_banner</div>
           <div>A large hero module that could promote key content or campaigns.</div>
-          <div>
-            <button class="btn select-module-btn">Select module</button>
-          </div>
+          <div><button class="btn select-module-btn">Select module</button></div>
         </div>
       </div>
 
-      <!-- 3 midsize elements side‑by‑side -->
+      <!-- Medium grid -->
       <div class="module-section">
         <h2>Medium Modules</h2>
         <p class="section-desc">Three medium‑sized modules in a grid.</p>
@@ -390,7 +379,7 @@
       </div>
     </div>
 
-    <!-- RIGHT PANE: Buffer + Event log -->
+    <!-- RIGHT PANE -->
     <div class="right">
       <div class="buffer-panel">
         <div class="buffer-header">
@@ -602,12 +591,10 @@
       updateActivityUI();
     }
 
-    // Vertical scroll on the left pane
     leftPane.addEventListener('scroll', function () {
       markActivity('vertical-scroll');
     }, { passive: true });
 
-    // Horizontal scroll on the carousel
     if (carouselWrapper) {
       carouselWrapper.addEventListener('scroll', function () {
         markActivity('carousel-scroll');
@@ -688,9 +675,7 @@
       });
 
       rows.forEach(function (row, rowIndex) {
-        row.sort(function (a, b) {
-          return a.left - b.left;
-        });
+        row.sort(function (a, b) { return a.left - b.left; });
         row.forEach(function (item, colIndex) {
           item.card.dataset.horizontalPosition = String(colIndex + 1);
           item.card.dataset.verticalPosition = String(rowIndex + 1);
@@ -701,7 +686,7 @@
     window.addEventListener('load', assignDynamicPositions);
     window.addEventListener('resize', assignDynamicPositions);
 
-    // --- SELECT_PROMOTION (only after view, once per module) -----------------
+    // --- SELECT_PROMOTION (force view + once per module) ---------------------
 
     var selectedModuleIds = new Set();
 
@@ -731,29 +716,30 @@
 
       selectBtn.addEventListener('click', function () {
         var id = card.getAttribute('data-module-id');
-        var hasBeenViewed = bufferIds.has(id) || sentIds.has(id);
-        if (!hasBeenViewed) return;
 
+        // Ensure positions
         if (!card.dataset.horizontalPosition || !card.dataset.verticalPosition) {
           assignDynamicPositions();
         }
         var h = Number(card.dataset.horizontalPosition || 0);
         var v = Number(card.dataset.verticalPosition || 0);
 
+        // If not yet viewed, force-add to buffer so we always have a matching view_promotion
+        if (!bufferIds.has(id) && !sentIds.has(id)) {
+          addModuleToBufferFromCard(card);
+        }
+
+        // Flush current buffer (so this click's module is in the latest view_promotion)
         sendViewPromotionFromBuffer();
+
+        // Then send select_promotion
         sendSelectPromotion(id, h, v);
       });
     });
 
-    // --- INTERSECTION OBSERVERS ----------------------------------------------
+    // --- INTERSECTION OBSERVER: 80% VISIBILITY IN LEFT PANE ------------------
 
     var allCards = Array.from(document.querySelectorAll('.module-card'));
-    var carouselCards = allCards.filter(function (c) {
-      return c.closest('.small-carousel-wrapper') !== null;
-    });
-    var nonCarouselCards = allCards.filter(function (c) {
-      return c.closest('.small-carousel-wrapper') === null;
-    });
 
     function buildThresholdList() {
       var thresholds = [];
@@ -763,7 +749,7 @@
     }
 
     if ('IntersectionObserver' in window) {
-      var mainObserver = new IntersectionObserver(function (entries) {
+      var observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.intersectionRatio >= 0.8) {
             addModuleToBufferFromCard(entry.target);
@@ -774,25 +760,9 @@
         threshold: buildThresholdList()
       });
 
-      nonCarouselCards.forEach(function (card) {
-        mainObserver.observe(card);
+      allCards.forEach(function (card) {
+        observer.observe(card);
       });
-
-      var carouselObserver = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.intersectionRatio >= 0.8) {
-            addModuleToBufferFromCard(entry.target);
-          }
-        });
-      }, {
-        root: carouselWrapper,
-        threshold: buildThresholdList()
-      });
-
-      carouselCards.forEach(function (card) {
-        carouselObserver.observe(card);
-      });
-
     } else {
       allCards.forEach(addModuleToBufferFromCard);
     }
