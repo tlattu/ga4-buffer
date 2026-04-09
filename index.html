@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Buffered GA view_promotion Demo</title>
+  <title>Buffered GA view_promotion Demo – Debug Scroll Activity</title>
   <style>
     * {
       box-sizing: border-box;
@@ -46,9 +46,11 @@
       font-size: 14px;
       color: #555;
     }
+
     .module-section {
       margin-bottom: 32px;
     }
+
     .module-card {
       border: 1px solid #ddd;
       padding: 12px;
@@ -66,6 +68,36 @@
       font-size: 12px;
       color: #666;
     }
+
+    .module--big {
+      min-height: 180px;
+    }
+    .module--medium {
+      min-height: 120px;
+    }
+    .module--small {
+      min-width: 140px;
+      max-width: 160px;
+      min-height: 80px;
+      flex: 0 0 auto;
+      margin-right: 8px;
+    }
+
+    .medium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .small-carousel-wrapper {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .small-carousel {
+      display: flex;
+      flex-direction: row;
+    }
+
     .btn {
       display: inline-block;
       padding: 6px 10px;
@@ -88,6 +120,7 @@
     .btn:hover:not(:disabled) {
       opacity: 0.9;
     }
+
     .events-header {
       display: flex;
       justify-content: space-between;
@@ -97,7 +130,7 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       background: #fff;
-      max-height: calc(100vh - 260px);
+      max-height: calc(100vh - 280px);
       overflow-y: auto;
       font-size: 13px;
     }
@@ -116,12 +149,14 @@
       color: #666;
       margin-bottom: 4px;
     }
+
     .spacer-text {
       font-size: 14px;
       color: #555;
       line-height: 1.5;
       margin-bottom: 16px;
     }
+
     .buffer-panel {
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -135,7 +170,6 @@
       align-items: center;
       margin-bottom: 4px;
     }
-    /* buffer-items now has no own scroll; it just grows */
     .buffer-items {
       border-top: 1px solid #eee;
       border-bottom: 1px solid #eee;
@@ -158,318 +192,199 @@
       color: #555;
       margin-top: 4px;
     }
+    .activity-text {
+      font-size: 11px;
+      color: #444;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
-  <!-- 
-    In a real implementation you would load GA/gtag or GTM here.
-
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXX');
-    </script>
-  -->
-
   <div class="container">
     <!-- LEFT PANE: Modules -->
     <div class="left" id="leftPane">
       <h1>Buffered GA view_promotion Demo</h1>
       <p>
-        Modules are buffered when they are at least 80% visible in this pane.
-        After <strong>2 seconds</strong> of no activity (scroll/click/move/key in this pane),
-        a <code>view_promotion</code> event is sent for the buffered modules.
-        Each module is included at most once across all view events.
-        You can only select a module after it has been viewed; on selection,
-        the buffer is flushed first (respecting per‑event item limits), then
-        <code>select_promotion</code> is sent (once per module).
+        Modules are buffered when they are at least 80% visible in this pane (or, for the carousel,
+        within the carousel viewport). After <strong>2 seconds</strong> of no activity
+        (click/move/key/scroll), a <code>view_promotion</code> event is sent for the buffered
+        modules. Each module is included at most once across all view events.
+        Positions (<code>horizontal_position</code>, <code>vertical_position</code>) are
+        calculated dynamically from the layout when the module is first viewed.
+        Debug fields (<code>buffer_index</code>, <code>buffer_size_at_add</code>, <code>batch_id</code>, <code>batch_size</code>)
+        are added to each item to help inspect buffer behavior.
       </p>
 
+      <!-- 1 big element -->
       <div class="module-section">
-        <h2>Top Modules</h2>
-        <p class="section-desc">Example modules near the top of the page.</p>
+        <h2>Big Module</h2>
+        <p class="section-desc">One large hero‑style module.</p>
 
-        <div class="module-card" data-module-id="module_hero_banner" data-index="0">
+        <div class="module-card module--big"
+             data-module-id="module_hero_banner">
           <div class="module-title">Hero Banner</div>
-          <div class="module-meta">ID: module_hero_banner · Index: 0</div>
-          <div>Large hero banner promoting current content.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_featured_list" data-index="1">
-          <div class="module-title">Featured List</div>
-          <div class="module-meta">ID: module_featured_list · Index: 1</div>
-          <div>Curated list of featured items.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_quick_links" data-index="2">
-          <div class="module-title">Quick Links</div>
-          <div class="module-meta">ID: module_quick_links · Index: 2</div>
-          <div>Shortcuts to popular sections.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
+          <div class="module-meta">ID: module_hero_banner</div>
+          <div>A large hero module that could promote key content or campaigns.</div>
+          <div>
+            <button class="btn select-module-btn">Select module</button>
+          </div>
         </div>
       </div>
 
-      <div class="spacer-text">
-        Scroll down to expose more modules; as they become mostly visible,
-        they are added to the buffer. The buffer is sent after 2 seconds
-        of inactivity, when the per‑event item limit is reached, or when
-        the page is hidden/unloaded.
-      </div>
-
+      <!-- 3 midsize elements side‑by‑side -->
       <div class="module-section">
-        <h2>Middle Modules</h2>
-        <p class="section-desc">Additional modules further down the page.</p>
+        <h2>Medium Modules</h2>
+        <p class="section-desc">Three medium‑sized modules in a grid.</p>
 
-        <div class="module-card" data-module-id="module_trending" data-index="3">
-          <div class="module-title">Trending Items</div>
-          <div class="module-meta">ID: module_trending · Index: 3</div>
-          <div>Most popular content at the moment.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
+        <div class="medium-grid">
+          <div class="module-card module--medium"
+               data-module-id="module_featured_list">
+            <div class="module-title">Featured List</div>
+            <div class="module-meta">ID: module_featured_list</div>
+            <div>Curated list of featured items.</div>
+            <div><button class="btn select-module-btn">Select module</button></div>
+          </div>
+
+          <div class="module-card module--medium"
+               data-module-id="module_quick_links">
+            <div class="module-title">Quick Links</div>
+            <div class="module-meta">ID: module_quick_links</div>
+            <div>Shortcuts to popular sections.</div>
+            <div><button class="btn select-module-btn">Select module</button></div>
+          </div>
+
+          <div class="module-card module--medium"
+               data-module-id="module_trending">
+            <div class="module-title">Trending Items</div>
+            <div class="module-meta">ID: module_trending</div>
+            <div>Most popular content at the moment.</div>
+            <div><button class="btn select-module-btn">Select module</button></div>
+          </div>
         </div>
+      </div>
 
-        <div class="module-card" data-module-id="module_live_content" data-index="4">
+      <!-- Vertical modules -->
+      <div class="module-section">
+        <h2>Additional Vertical Modules</h2>
+        <p class="section-desc">More modules stacked vertically.</p>
+
+        <div class="module-card"
+             data-module-id="module_live_content">
           <div class="module-title">Live Content</div>
-          <div class="module-meta">ID: module_live_content · Index: 4</div>
+          <div class="module-meta">ID: module_live_content</div>
           <div>Content currently happening live.</div>
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
 
-        <div class="module-card" data-module-id="module_recommended" data-index="5">
+        <div class="module-card"
+             data-module-id="module_recommended">
           <div class="module-title">Recommended For You</div>
-          <div class="module-meta">ID: module_recommended · Index: 5</div>
+          <div class="module-meta">ID: module_recommended</div>
           <div>Personalized suggestions based on past behavior.</div>
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
       </div>
 
+      <!-- Carousel -->
       <div class="module-section">
-        <h2>Lower Modules</h2>
-        <p class="section-desc">More modules to extend page length.</p>
+        <h2>Small Modules Carousel</h2>
+        <p class="section-desc">
+          A horizontally scrollable row of small modules (carousel‑like).
+        </p>
 
-        <div class="module-card" data-module-id="module_popular_categories" data-index="6">
-          <div class="module-title">Popular Categories</div>
-          <div class="module-meta">ID: module_popular_categories · Index: 6</div>
-          <div>Links to popular categories or sections.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_campaigns" data-index="7">
-          <div class="module-title">Campaigns</div>
-          <div class="module-meta">ID: module_campaigns · Index: 7</div>
-          <div>Overview of ongoing campaigns and promotions.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
+        <div class="small-carousel-wrapper">
+          <div class="small-carousel">
+            <!-- 12 small modules -->
+            <div class="module-card module--small" data-module-id="module_small_1">
+              <div class="module-title">Small 1</div>
+              <div class="module-meta">ID: module_small_1</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_2">
+              <div class="module-title">Small 2</div>
+              <div class="module-meta">ID: module_small_2</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_3">
+              <div class="module-title">Small 3</div>
+              <div class="module-meta">ID: module_small_3</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_4">
+              <div class="module-title">Small 4</div>
+              <div class="module-meta">ID: module_small_4</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_5">
+              <div class="module-title">Small 5</div>
+              <div class="module-meta">ID: module_small_5</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_6">
+              <div class="module-title">Small 6</div>
+              <div class="module-meta">ID: module_small_6</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_7">
+              <div class="module-title">Small 7</div>
+              <div class="module-meta">ID: module_small_7</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_8">
+              <div class="module-title">Small 8</div>
+              <div class="module-meta">ID: module_small_8</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_9">
+              <div class="module-title">Small 9</div>
+              <div class="module-meta">ID: module_small_9</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_10">
+              <div class="module-title">Small 10</div>
+              <div class="module-meta">ID: module_small_10</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_11">
+              <div class="module-title">Small 11</div>
+              <div class="module-meta">ID: module_small_11</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+            <div class="module-card module--small" data-module-id="module_small_12">
+              <div class="module-title">Small 12</div>
+              <div class="module-meta">ID: module_small_12</div>
+              <div><button class="btn select-module-btn">Select</button></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Extra modules to approach GA item limits -->
+      <!-- Extra vertical modules -->
       <div class="module-section">
-        <h2>Many More Modules</h2>
-        <p class="section-desc">
-          These modules are here to generate large item arrays and test GA limits.
-        </p>
+        <h2>More Vertical Modules</h2>
+        <p class="section-desc">Extra modules to extend page length and fill batches.</p>
 
-        <!-- Indices 8–39 (32 extra modules) -->
-        <div class="module-card" data-module-id="module_extra_8" data-index="8">
-          <div class="module-title">Extra Module 8</div>
-          <div class="module-meta">ID: module_extra_8 · Index: 8</div>
-          <div>Additional content block #8.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_9" data-index="9">
-          <div class="module-title">Extra Module 9</div>
-          <div class="module-meta">ID: module_extra_9 · Index: 9</div>
-          <div>Additional content block #9.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_10" data-index="10">
-          <div class="module-title">Extra Module 10</div>
-          <div class="module-meta">ID: module_extra_10 · Index: 10</div>
-          <div>Additional content block #10.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_11" data-index="11">
-          <div class="module-title">Extra Module 11</div>
-          <div class="module-meta">ID: module_extra_11 · Index: 11</div>
-          <div>Additional content block #11.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_extra_12" data-index="12">
-          <div class="module-title">Extra Module 12</div>
-          <div class="module-meta">ID: module_extra_12 · Index: 12</div>
-          <div>Additional content block #12.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_13" data-index="13">
-          <div class="module-title">Extra Module 13</div>
-          <div class="module-meta">ID: module_extra_13 · Index: 13</div>
-          <div>Additional content block #13.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_14" data-index="14">
-          <div class="module-title">Extra Module 14</div>
-          <div class="module-meta">ID: module_extra_14 · Index: 14</div>
-          <div>Additional content block #14.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_15" data-index="15">
-          <div class="module-title">Extra Module 15</div>
-          <div class="module-meta">ID: module_extra_15 · Index: 15</div>
-          <div>Additional content block #15.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_extra_16" data-index="16">
-          <div class="module-title">Extra Module 16</div>
-          <div class="module-meta">ID: module_extra_16 · Index: 16</div>
-          <div>Additional content block #16.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_17" data-index="17">
-          <div class="module-title">Extra Module 17</div>
-          <div class="module-meta">ID: module_extra_17 · Index: 17</div>
-          <div>Additional content block #17.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_18" data-index="18">
+        <div class="module-card"
+             data-module-id="module_extra_18">
           <div class="module-title">Extra Module 18</div>
-          <div class="module-meta">ID: module_extra_18 · Index: 18</div>
+          <div class="module-meta">ID: module_extra_18</div>
           <div>Additional content block #18.</div>
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
-        <div class="module-card" data-module-id="module_extra_19" data-index="19">
+
+        <div class="module-card"
+             data-module-id="module_extra_19">
           <div class="module-title">Extra Module 19</div>
-          <div class="module-meta">ID: module_extra_19 · Index: 19</div>
+          <div class="module-meta">ID: module_extra_19</div>
           <div>Additional content block #19.</div>
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
 
-        <div class="module-card" data-module-id="module_extra_20" data-index="20">
+        <div class="module-card"
+             data-module-id="module_extra_20">
           <div class="module-title">Extra Module 20</div>
-          <div class="module-meta">ID: module_extra_20 · Index: 20</div>
+          <div class="module-meta">ID: module_extra_20</div>
           <div>Additional content block #20.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_21" data-index="21">
-          <div class="module-title">Extra Module 21</div>
-          <div class="module-meta">ID: module_extra_21 · Index: 21</div>
-          <div>Additional content block #21.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_22" data-index="22">
-          <div class="module-title">Extra Module 22</div>
-          <div class="module-meta">ID: module_extra_22 · Index: 22</div>
-          <div>Additional content block #22.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_23" data-index="23">
-          <div class="module-title">Extra Module 23</div>
-          <div class="module-meta">ID: module_extra_23 · Index: 23</div>
-          <div>Additional content block #23.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_extra_24" data-index="24">
-          <div class="module-title">Extra Module 24</div>
-          <div class="module-meta">ID: module_extra_24 · Index: 24</div>
-          <div>Additional content block #24.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_25" data-index="25">
-          <div class="module-title">Extra Module 25</div>
-          <div class="module-meta">ID: module_extra_25 · Index: 25</div>
-          <div>Additional content block #25.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_26" data-index="26">
-          <div class="module-title">Extra Module 26</div>
-          <div class="module-meta">ID: module_extra_26 · Index: 26</div>
-          <div>Additional content block #26.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_27" data-index="27">
-          <div class="module-title">Extra Module 27</div>
-          <div class="module-meta">ID: module_extra_27 · Index: 27</div>
-          <div>Additional content block #27.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_extra_28" data-index="28">
-          <div class="module-title">Extra Module 28</div>
-          <div class="module-meta">ID: module_extra_28 · Index: 28</div>
-          <div>Additional content block #28.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_29" data-index="29">
-          <div class="module-title">Extra Module 29</div>
-          <div class="module-meta">ID: module_extra_29 · Index: 29</div>
-          <div>Additional content block #29.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_30" data-index="30">
-          <div class="module-title">Extra Module 30</div>
-          <div class="module-meta">ID: module_extra_30 · Index: 30</div>
-          <div>Additional content block #30.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_31" data-index="31">
-          <div class="module-title">Extra Module 31</div>
-          <div class="module-meta">ID: module_extra_31 · Index: 31</div>
-          <div>Additional content block #31.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_extra_32" data-index="32">
-          <div class="module-title">Extra Module 32</div>
-          <div class="module-meta">ID: module_extra_32 · Index: 32</div>
-          <div>Additional content block #32.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_33" data-index="33">
-          <div class="module-title">Extra Module 33</div>
-          <div class="module-meta">ID: module_extra_33 · Index: 33</div>
-          <div>Additional content block #33.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_34" data-index="34">
-          <div class="module-title">Extra Module 34</div>
-          <div class="module-meta">ID: module_extra_34 · Index: 34</div>
-          <div>Additional content block #34.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_35" data-index="35">
-          <div class="module-title">Extra Module 35</div>
-          <div class="module-meta">ID: module_extra_35 · Index: 35</div>
-          <div>Additional content block #35.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-
-        <div class="module-card" data-module-id="module_extra_36" data-index="36">
-          <div class="module-title">Extra Module 36</div>
-          <div class="module-meta">ID: module_extra_36 · Index: 36</div>
-          <div>Additional content block #36.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_37" data-index="37">
-          <div class="module-title">Extra Module 37</div>
-          <div class="module-meta">ID: module_extra_37 · Index: 37</div>
-          <div>Additional content block #37.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_38" data-index="38">
-          <div class="module-title">Extra Module 38</div>
-          <div class="module-meta">ID: module_extra_38 · Index: 38</div>
-          <div>Additional content block #38.</div>
-          <div><button class="btn select-module-btn">Select module</button></div>
-        </div>
-        <div class="module-card" data-module-id="module_extra_39" data-index="39">
-          <div class="module-title">Extra Module 39</div>
-          <div class="module-meta">ID: module_extra_39 · Index: 39</div>
-          <div>Additional content block #39.</div>
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
       </div>
@@ -487,6 +402,9 @@
         </div>
         <div class="status-text" id="bufferStatusText">
           Status: waiting for modules to become visible.
+        </div>
+        <div class="activity-text" id="activityStatus">
+          Last activity: none
         </div>
         <div style="margin-top:4px;">
           <button class="btn btn-secondary" id="flushBufferBtn" style="font-size:11px;padding:3px 6px;">
@@ -509,7 +427,6 @@
     // Set up global dataLayer if it doesn't exist.
     window.dataLayer = window.dataLayer || [];
 
-    // Monkey-patch dataLayer.push to also log events in the UI.
     (function () {
       var originalPush = window.dataLayer.push;
       window.dataLayer.push = function () {
@@ -540,27 +457,28 @@
       eventsListEl.insertBefore(item, eventsListEl.firstChild);
     }
 
-    // --- BUFFER LOGIC --------------------------------------------------------
-    // Modules enter buffer when 80% visible.
-    // Buffer is flushed to view_promotion after 2s of inactivity,
-    // when max items per event is reached, or on page hide.
-    // Each module is sent at most once across all view_promotion events.
+    // --- BUFFER LOGIC + DEBUG FIELDS ----------------------------------------
 
-    var MAX_ITEMS_PER_EVENT = 20;  // adjust to test GA limits (e.g., 50, 100, 200)
+    var MAX_ITEMS_PER_EVENT = 20;
 
-    var buffer = [];            // { item_id, index }
-    var bufferIds = new Set();  // currently buffered ids
-    var sentIds = new Set();    // ids already sent in some view_promotion
+    var buffer = [];  // { item_id, horizontal_position, vertical_position, buffer_index, buffer_size_at_add }
+    var bufferIds = new Set();
+    var sentIds = new Set();
 
-    var inactivityDelayMs = 2000;        // 2 seconds
-    var inactivityCheckInterval = 250;   // check 4x per second
+    var inactivityDelayMs = 2000;
+    var inactivityCheckInterval = 250;
     var lastActivityTime = Date.now();
+    var lastActivitySource = 'none';
+
+    var batchCounter = 0;
 
     var bufferItemsContainer = document.getElementById('bufferItemsContainer');
     var bufferTimerLabel = document.getElementById('bufferTimerLabel');
     var bufferStatusText = document.getElementById('bufferStatusText');
+    var activityStatus = document.getElementById('activityStatus');
     var flushBufferBtn = document.getElementById('flushBufferBtn');
     var leftPane = document.getElementById('leftPane');
+    var carouselWrapper = document.querySelector('.small-carousel-wrapper');
 
     function renderBufferUI() {
       bufferItemsContainer.innerHTML = '';
@@ -580,7 +498,12 @@
       buffer.forEach(function (item) {
         var div = document.createElement('div');
         div.className = 'buffer-item';
-        div.textContent = item.item_id + ' (index ' + item.index + ')';
+        div.textContent =
+          item.item_id +
+          ' (h:' + item.horizontal_position +
+          ', v:' + item.vertical_position +
+          ', buf_idx:' + item.buffer_index +
+          ', buf_size_at_add:' + item.buffer_size_at_add + ')';
         bufferItemsContainer.appendChild(div);
       });
 
@@ -590,15 +513,37 @@
       flushBufferBtn.disabled = false;
     }
 
-    function addModuleToBuffer(itemId, index) {
-      // Do not re-add if already sent, or already buffered
+    function updateActivityUI() {
+      var now = Date.now();
+      var msSince = now - lastActivityTime;
+      var sec = (msSince / 1000).toFixed(1);
+      activityStatus.textContent =
+        'Last activity: ' + lastActivitySource + ' (' + sec + 's ago)';
+    }
+
+    function addModuleToBufferFromCard(card) {
+      var itemId = card.getAttribute('data-module-id');
       if (sentIds.has(itemId) || bufferIds.has(itemId)) return;
 
-      buffer.push({ item_id: itemId, index: index });
+      if (!card.dataset.horizontalPosition || !card.dataset.verticalPosition) {
+        assignDynamicPositions();
+      }
+      var h = Number(card.dataset.horizontalPosition || 0);
+      var v = Number(card.dataset.verticalPosition || 0);
+
+      var bufferIndex = buffer.length;
+      var newSize = bufferIndex + 1;
+
+      buffer.push({
+        item_id: itemId,
+        horizontal_position: h,
+        vertical_position: v,
+        buffer_index: bufferIndex,
+        buffer_size_at_add: newSize
+      });
       bufferIds.add(itemId);
       renderBufferUI();
 
-      // If we reached the per-event item limit, flush immediately
       if (buffer.length >= MAX_ITEMS_PER_EVENT) {
         sendViewPromotionFromBuffer();
       }
@@ -613,11 +558,22 @@
     function sendViewPromotionFromBuffer() {
       if (buffer.length === 0) return;
 
+      batchCounter += 1;
+      var currentBatchId = batchCounter;
+      var batchSize = buffer.length;
+
       var items = buffer.map(function (b) {
-        return { item_id: b.item_id, index: b.index };
+        return {
+          item_id: b.item_id,
+          horizontal_position: b.horizontal_position,
+          vertical_position: b.vertical_position,
+          buffer_index: b.buffer_index,
+          buffer_size_at_add: b.buffer_size_at_add,
+          batch_id: currentBatchId,
+          batch_size: batchSize
+        };
       });
 
-      // Mark as sent so they will never be buffered again
       items.forEach(function (it) {
         sentIds.add(it.item_id);
       });
@@ -638,23 +594,36 @@
       sendViewPromotionFromBuffer();
     });
 
-    // --- ACTIVITY TRACKING (reset timer on activity) -------------------------
-    function markActivity() {
+    // --- ACTIVITY TRACKING ---------------------------------------------------
+
+    function markActivity(source) {
       lastActivityTime = Date.now();
+      lastActivitySource = source;
+      updateActivityUI();
     }
 
-    leftPane.addEventListener('scroll', markActivity, { passive: true });
-    leftPane.addEventListener('click', markActivity);
-    leftPane.addEventListener('mousemove', markActivity);
-    leftPane.addEventListener('keydown', markActivity);
+    // Vertical scroll on the left pane
+    leftPane.addEventListener('scroll', function () {
+      markActivity('vertical-scroll');
+    }, { passive: true });
 
-    // --- INACTIVITY CHECK ----------------------------------------------------
+    // Horizontal scroll on the carousel
+    if (carouselWrapper) {
+      carouselWrapper.addEventListener('scroll', function () {
+        markActivity('carousel-scroll');
+      }, { passive: true });
+    }
+
+    leftPane.addEventListener('click', function () { markActivity('click'); });
+    leftPane.addEventListener('mousemove', function () { markActivity('mousemove'); });
+    leftPane.addEventListener('keydown', function () { markActivity('keydown'); });
+
     setInterval(function () {
-      var now = Date.now();
-      var msSinceActivity = now - lastActivityTime;
-
       if (buffer.length > 0) {
+        var now = Date.now();
+        var msSinceActivity = now - lastActivityTime;
         var remainingMs = inactivityDelayMs - msSinceActivity;
+
         if (remainingMs <= 0) {
           bufferTimerLabel.textContent = 'Sending now…';
           sendViewPromotionFromBuffer();
@@ -665,9 +634,11 @@
       } else {
         bufferTimerLabel.textContent = 'No inactivity';
       }
+      updateActivityUI();
     }, inactivityCheckInterval);
 
     // --- FLUSH ON VISIBILITY CHANGE / PAGEHIDE -------------------------------
+
     function flushOnHideOrUnload() {
       if (buffer.length > 0) {
         sendViewPromotionFromBuffer();
@@ -682,12 +653,59 @@
 
     window.addEventListener('pagehide', flushOnHideOrUnload);
 
-    // --- SELECT_PROMOTION CLICK HANDLERS (only after view, once per module) --
+    // --- DYNAMIC POSITION CALCULATION ----------------------------------------
+
+    function assignDynamicPositions() {
+      var paneRect = leftPane.getBoundingClientRect();
+      var cards = Array.from(document.querySelectorAll('.module-card'));
+
+      var cardData = cards.map(function (card) {
+        var rect = card.getBoundingClientRect();
+        var top = rect.top - paneRect.top;
+        var left = rect.left - paneRect.left;
+        return { card: card, top: top, left: left, height: rect.height };
+      });
+
+      cardData.sort(function (a, b) {
+        if (a.top === b.top) return a.left - b.left;
+        return a.top - b.top;
+      });
+
+      var rows = [];
+      cardData.forEach(function (item) {
+        if (rows.length === 0) {
+          rows.push([item]);
+        } else {
+          var currentRow = rows[rows.length - 1];
+          var firstInRow = currentRow[0];
+          var rowTolerance = firstInRow.height * 0.5;
+          if (Math.abs(item.top - firstInRow.top) <= rowTolerance) {
+            currentRow.push(item);
+          } else {
+            rows.push([item]);
+          }
+        }
+      });
+
+      rows.forEach(function (row, rowIndex) {
+        row.sort(function (a, b) {
+          return a.left - b.left;
+        });
+        row.forEach(function (item, colIndex) {
+          item.card.dataset.horizontalPosition = String(colIndex + 1);
+          item.card.dataset.verticalPosition = String(rowIndex + 1);
+        });
+      });
+    }
+
+    window.addEventListener('load', assignDynamicPositions);
+    window.addEventListener('resize', assignDynamicPositions);
+
+    // --- SELECT_PROMOTION (only after view, once per module) -----------------
 
     var selectedModuleIds = new Set();
 
-    function sendSelectPromotion(moduleId, index) {
-      // Only once per module
+    function sendSelectPromotion(moduleId, h, v) {
       if (selectedModuleIds.has(moduleId)) return;
       selectedModuleIds.add(moduleId);
 
@@ -699,7 +717,8 @@
           items: [
             {
               item_id: moduleId,
-              index: index
+              horizontal_position: h,
+              vertical_position: v
             }
           ]
         }
@@ -712,30 +731,42 @@
 
       selectBtn.addEventListener('click', function () {
         var id = card.getAttribute('data-module-id');
-        var idx = Number(card.getAttribute('data-index'));
-
-        // User cannot select without viewing:
-        // require module to be either in buffer or already sent
         var hasBeenViewed = bufferIds.has(id) || sentIds.has(id);
         if (!hasBeenViewed) return;
 
-        // First flush current buffer (impressions for others),
-        // then send select_promotion for this module.
+        if (!card.dataset.horizontalPosition || !card.dataset.verticalPosition) {
+          assignDynamicPositions();
+        }
+        var h = Number(card.dataset.horizontalPosition || 0);
+        var v = Number(card.dataset.verticalPosition || 0);
+
         sendViewPromotionFromBuffer();
-        sendSelectPromotion(id, idx);
+        sendSelectPromotion(id, h, v);
       });
     });
 
-    // --- INTERSECTION OBSERVER: 80% VISIBILITY -------------------------------
+    // --- INTERSECTION OBSERVERS ----------------------------------------------
+
+    var allCards = Array.from(document.querySelectorAll('.module-card'));
+    var carouselCards = allCards.filter(function (c) {
+      return c.closest('.small-carousel-wrapper') !== null;
+    });
+    var nonCarouselCards = allCards.filter(function (c) {
+      return c.closest('.small-carousel-wrapper') === null;
+    });
+
+    function buildThresholdList() {
+      var thresholds = [];
+      var numSteps = 20;
+      for (var i = 0; i <= numSteps; i++) thresholds.push(i / numSteps);
+      return thresholds;
+    }
 
     if ('IntersectionObserver' in window) {
-      var observer = new IntersectionObserver(function (entries) {
+      var mainObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.intersectionRatio >= 0.8) {
-            var card = entry.target;
-            var id = card.getAttribute('data-module-id');
-            var idx = Number(card.getAttribute('data-index'));
-            addModuleToBuffer(id, idx);
+            addModuleToBufferFromCard(entry.target);
           }
         });
       }, {
@@ -743,25 +774,27 @@
         threshold: buildThresholdList()
       });
 
-      document.querySelectorAll('.module-card').forEach(function (card) {
-        observer.observe(card);
+      nonCarouselCards.forEach(function (card) {
+        mainObserver.observe(card);
       });
-    } else {
-      // Fallback: if IntersectionObserver is not supported, just add everything on load
-      document.querySelectorAll('.module-card').forEach(function (card) {
-        var id = card.getAttribute('data-module-id');
-        var idx = Number(card.getAttribute('data-index'));
-        addModuleToBuffer(id, idx);
-      });
-    }
 
-    function buildThresholdList() {
-      var thresholds = [];
-      var numSteps = 20;
-      for (var i = 0; i <= numSteps; i++) {
-        thresholds.push(i / numSteps);
-      }
-      return thresholds;
+      var carouselObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.intersectionRatio >= 0.8) {
+            addModuleToBufferFromCard(entry.target);
+          }
+        });
+      }, {
+        root: carouselWrapper,
+        threshold: buildThresholdList()
+      });
+
+      carouselCards.forEach(function (card) {
+        carouselObserver.observe(card);
+      });
+
+    } else {
+      allCards.forEach(addModuleToBufferFromCard);
     }
 
     // --- MISC ----------------------------------------------------------------
@@ -770,15 +803,14 @@
       eventsListEl.innerHTML = '';
     });
 
-    // Optional: initial page_view event for context
     window.dataLayer.push({
       event: 'page_view',
       page_location: window.location.href,
       page_title: document.title
     });
 
-    // Initial render
     renderBufferUI();
+    updateActivityUI();
   </script>
 </body>
 </html>
