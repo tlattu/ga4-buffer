@@ -135,9 +135,8 @@
       align-items: center;
       margin-bottom: 4px;
     }
+    /* buffer-items now has no own scroll; it just grows */
     .buffer-items {
-      max-height: 140px; /* increased so more are visible; rest scrollable */
-      overflow-y: auto;
       border-top: 1px solid #eee;
       border-bottom: 1px solid #eee;
       padding: 4px 0;
@@ -273,9 +272,7 @@
           These modules are here to generate large item arrays and test GA limits.
         </p>
 
-        <!-- We create lots of modules manually; in real code you'd probably generate them -->
         <!-- Indices 8–39 (32 extra modules) -->
-        <!-- Row 1 -->
         <div class="module-card" data-module-id="module_extra_8" data-index="8">
           <div class="module-title">Extra Module 8</div>
           <div class="module-meta">ID: module_extra_8 · Index: 8</div>
@@ -301,7 +298,6 @@
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
 
-        <!-- More extras (you can scroll to see them all) -->
         <div class="module-card" data-module-id="module_extra_12" data-index="12">
           <div class="module-title">Extra Module 12</div>
           <div class="module-meta">ID: module_extra_12 · Index: 12</div>
