@@ -375,6 +375,87 @@
           <div><button class="btn select-module-btn">Select module</button></div>
         </div>
       </div>
+
+      <!-- Even more modules for overflow testing -->
+      <div class="module-section">
+        <h2>Even More Modules (Overflow Test)</h2>
+        <p class="section-desc">
+          These modules are here to help reach the MAX_ITEMS_PER_EVENT limit quickly.
+        </p>
+
+        <div class="module-card" data-module-id="module_extra_21">
+          <div class="module-title">Extra Module 21</div>
+          <div class="module-meta">ID: module_extra_21</div>
+          <div>Overflow test block #21.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_22">
+          <div class="module-title">Extra Module 22</div>
+          <div class="module-meta">ID: module_extra_22</div>
+          <div>Overflow test block #22.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_23">
+          <div class="module-title">Extra Module 23</div>
+          <div class="module-meta">ID: module_extra_23</div>
+          <div>Overflow test block #23.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_24">
+          <div class="module-title">Extra Module 24</div>
+          <div class="module-meta">ID: module_extra_24</div>
+          <div>Overflow test block #24.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_25">
+          <div class="module-title">Extra Module 25</div>
+          <div class="module-meta">ID: module_extra_25</div>
+          <div>Overflow test block #25.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_26">
+          <div class="module-title">Extra Module 26</div>
+          <div class="module-meta">ID: module_extra_26</div>
+          <div>Overflow test block #26.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_27">
+          <div class="module-title">Extra Module 27</div>
+          <div class="module-meta">ID: module_extra_27</div>
+          <div>Overflow test block #27.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_28">
+          <div class="module-title">Extra Module 28</div>
+          <div class="module-meta">ID: module_extra_28</div>
+          <div>Overflow test block #28.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_29">
+          <div class="module-title">Extra Module 29</div>
+          <div class="module-meta">ID: module_extra_29</div>
+          <div>Overflow test block #29.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_30">
+          <div class="module-title">Extra Module 30</div>
+          <div class="module-meta">ID: module_extra_30</div>
+          <div>Overflow test block #30.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_31">
+          <div class="module-title">Extra Module 31</div>
+          <div class="module-meta">ID: module_extra_31</div>
+          <div>Overflow test block #31.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+        <div class="module-card" data-module-id="module_extra_32">
+          <div class="module-title">Extra Module 32</div>
+          <div class="module-meta">ID: module_extra_32</div>
+          <div>Overflow test block #32.</div>
+          <div><button class="btn select-module-btn">Select module</button></div>
+        </div>
+      </div>
     </div>
 
     <!-- RIGHT PANE -->
@@ -646,12 +727,9 @@
     document.addEventListener('mousemove', function (e) {
       if (lastMouseY !== null) {
         var goingUp = e.clientY < lastMouseY;
-        // Near top & moving up
         if (!exitIntentFired && goingUp && e.clientY <= 5) {
           exitIntentFired = true;
-          // Flush buffer on exit intent
           flushOnHideOrUnload();
-          // Optional: reset after some time if you want to allow another exit intent later
           setTimeout(function () { exitIntentFired = false; }, 5000);
         }
       }
