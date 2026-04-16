@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Buffered GA4 view_item_list Demo – Items & Lists</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin: 0; background: #f5f5f5; color: #333; }
+    .container { display: flex; height: 100vh; }
+    .left, .right { padding: 16px; overflow-y: auto; }
+    .left { width: 55%; border-right: 1px solid #ddd; background: #fff; }
+    .right { width: 45%; background: #fafafa; display: flex; flex-direction: column; gap: 8px; }
+
+    h1 { margin-top: 0; }
+    h2 { margin-top: 24px; margin-bottom: 8px; }
+
+    .module-section { margin-bottom: 32px; }
+    .module-title { font-weight: bold; margin-bottom: 4px; }
+
+    .item-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .item-card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      background: #fff;
+      width: 160px;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .item-name { font-size: 13px; margin-bottom: 4px; }
+
+    .carousel-wrapper {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .carousel {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+    }
+    .carousel .item-card {
+      min-width: 140px;
+      max-width: 160px;
+      flex: 0 0 auto;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 3px;
+      border: 1px solid #007bff;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      border-color: #6c757d;
+      background: #6c757d;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .events-list {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .event-item {
+      border-bottom: 1px solid #eee;
+      padding: 8px 10px;
+      font-family: Consolas, "Courier New", monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .event-item:last-child { border-bottom: none; }
+    .event-meta { font-size: 11px; color: #666; margin-bottom: 4px; }
+
+    .buffer-panel {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      padding: 8px;
+      font-size: 12px;
+    }
+    .buffer-items {
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      padding: 4px 0;
+      margin: 4px 0;
+    }
+    .buffer-item {
+      padding: 2px 0;
+      border-bottom: 1px dashed #eee;
+      font-size: 11px;
+    }
+    .buffer-item:last-child { border-bottom: none; }
+
+    .timer-text, .status-text, .activity-text {
+      font-size: 11px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- LEFT: modules/lists and items -->
+  <div class="left" id="leftPane">
+    <h1>Buffered GA4 view_item_list Demo</h1>
+    <p>
+      Items are buffered when they are at least 80% visible in this pane.
+      After <strong>2 seconds</strong> of no activity (click/move/key/scroll),
+      a <code>view_item_list</code> event is sent for each list that has buffered items.
+      Each item is included at most once across all view events.
+    </p>
+
+    <!-- Module 1 -->
+    <div class="module-section"
+         data-item-list-id="list_hero"
+         data-item-list-name="Hero Items">
+      <div class="module-title">Module 1: Hero Items (list_hero)</div>
+      <div class="item-list">
+        <div class="item-card" data-item-id="hero_item_1" data-item-name="Hero Item 1">
+          <div class="item-name">Hero Item 1</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="hero_item_2" data-item-name="Hero Item 2">
+          <div class="item-name">Hero Item 2</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="hero_item_3" data-item-name="Hero Item 3">
+          <div class="item-name">Hero Item 3</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 2 -->
+    <div class="module-section"
+         data-item-list-id="list_trending"
+         data-item-list-name="Trending Items">
+      <div class="module-title">Module 2: Trending Items (list_trending)</div>
+      <div class="item-list">
+        <div class="item-card" data-item-id="trend_1" data-item-name="Trending Item 1">
+          <div class="item-name">Trending Item 1</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="trend_2" data-item-name="Trending Item 2">
+          <div class="item-name">Trending Item 2</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="trend_3" data-item-name="Trending Item 3">
+          <div class="item-name">Trending Item 3</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="trend_4" data-item-name="Trending Item 4">
+          <div class="item-name">Trending Item 4</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="trend_5" data-item-name="Trending Item 5">
+          <div class="item-name">Trending Item 5</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 3 -->
+    <div class="module-section"
+         data-item-list-id="list_recommended"
+         data-item-list-name="Recommended Items">
+      <div class="module-title">Module 3: Recommended Items (list_recommended)</div>
+      <div class="item-list">
+        <div class="item-card" data-item-id="rec_1" data-item-name="Recommended 1">
+          <div class="item-name">Recommended 1</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="rec_2" data-item-name="Recommended 2">
+          <div class="item-name">Recommended 2</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="rec_3" data-item-name="Recommended 3">
+          <div class="item-name">Recommended 3</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="rec_4" data-item-name="Recommended 4">
+          <div class="item-name">Recommended 4</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="rec_5" data-item-name="Recommended 5">
+          <div class="item-name">Recommended 5</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="rec_6" data-item-name="Recommended 6">
+          <div class="item-name">Recommended 6</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 4: Horizontal carousel -->
+    <div class="module-section"
+         data-item-list-id="list_carousel"
+         data-item-list-name="Carousel Items">
+      <div class="module-title">Module 4: Carousel (list_carousel, 12 items)</div>
+      <div class="carousel-wrapper" id="carouselWrapper">
+        <div class="carousel">
+          <!-- 12 items -->
+          <div class="item-card" data-item-id="car_1" data-item-name="Carousel Item 1">
+            <div class="item-name">Carousel Item 1</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_2" data-item-name="Carousel Item 2">
+            <div class="item-name">Carousel Item 2</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_3" data-item-name="Carousel Item 3">
+            <div class="item-name">Carousel Item 3</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_4" data-item-name="Carousel Item 4">
+            <div class="item-name">Carousel Item 4</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_5" data-item-name="Carousel Item 5">
+            <div class="item-name">Carousel Item 5</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_6" data-item-name="Carousel Item 6">
+            <div class="item-name">Carousel Item 6</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_7" data-item-name="Carousel Item 7">
+            <div class="item-name">Carousel Item 7</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_8" data-item-name="Carousel Item 8">
+            <div class="item-name">Carousel Item 8</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_9" data-item-name="Carousel Item 9">
+            <div class="item-name">Carousel Item 9</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_10" data-item-name="Carousel Item 10">
+            <div class="item-name">Carousel Item 10</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_11" data-item-name="Carousel Item 11">
+            <div class="item-name">Carousel Item 11</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+          <div class="item-card" data-item-id="car_12" data-item-name="Carousel Item 12">
+            <div class="item-name">Carousel Item 12</div>
+            <button class="btn select-item-btn">Select</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 5 -->
+    <div class="module-section"
+         data-item-list-id="list_extra_1"
+         data-item-list-name="Extra List 1">
+      <div class="module-title">Module 5: Extra List 1 (list_extra_1)</div>
+      <div class="item-list">
+        <div class="item-card" data-item-id="extra1_1" data-item-name="Extra 1-1">
+          <div class="item-name">Extra 1-1</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra1_2" data-item-name="Extra 1-2">
+          <div class="item-name">Extra 1-2</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra1_3" data-item-name="Extra 1-3">
+          <div class="item-name">Extra 1-3</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra1_4" data-item-name="Extra 1-4">
+          <div class="item-name">Extra 1-4</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 6 -->
+    <div class="module-section"
+         data-item-list-id="list_extra_2"
+         data-item-list-name="Extra List 2">
+      <div class="module-title">Module 6: Extra List 2 (list_extra_2)</div>
+      <div class="item-list">
+        <div class="item-card" data-item-id="extra2_1" data-item-name="Extra 2-1">
+          <div class="item-name">Extra 2-1</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra2_2" data-item-name="Extra 2-2">
+          <div class="item-name">Extra 2-2</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra2_3" data-item-name="Extra 2-3">
+          <div class="item-name">Extra 2-3</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra2_4" data-item-name="Extra 2-4">
+          <div class="item-name">Extra 2-4</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+        <div class="item-card" data-item-id="extra2_5" data-item-name="Extra 2-5">
+          <div class="item-name">Extra 2-5</div>
+          <button class="btn select-item-btn">Select</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: buffer + dataLayer log -->
+  <div class="right">
+    <div class="buffer-panel">
+      <div class="buffer-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <strong>Buffered “seen” items</strong>
+        <span class="timer-text" id="bufferTimerLabel">No inactivity</span>
+      </div>
+      <div class="buffer-items" id="bufferItemsContainer">
+        <div style="color:#888;font-size:11px;">No items buffered yet.</div>
+      </div>
+      <div class="status-text" id="bufferStatusText">
+        Status: waiting for items to become visible.
+      </div>
+      <div class="activity-text" id="activityStatus">
+        Last activity: none
+      </div>
+      <div style="margin-top:4px;">
+        <button class="btn btn-secondary" id="flushBufferBtn" style="font-size:11px;padding:3px 6px;">
+          Flush buffer now
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>dataLayer Events</h2>
+      <button class="btn btn-secondary" id="clearEventsBtn" style="font-size:12px;padding:4px 8px;">
+        Clear
+      </button>
+    </div>
+    <div class="events-list" id="eventsList"></div>
+  </div>
+</div>
+
+<script>
+  // ---------------- dataLayer logging (debug) ----------------
+  window.dataLayer = window.dataLayer || [];
+  (function () {
+    var originalPush = window.dataLayer.push;
+    window.dataLayer.push = function () {
+      var result = originalPush.apply(window.dataLayer, arguments);
+      for (var i = 0; i < arguments.length; i++) {
+        logEvent(arguments[i]);
+      }
+      return result;
+    };
+  })();
+
+  var eventsListEl = document.getElementById('eventsList');
+
+  function logEvent(evt) {
+    var item = document.createElement('div');
+    item.className = 'event-item';
+
+    var meta = document.createElement('div');
+    meta.className = 'event-meta';
+    var ts = new Date().toLocaleTimeString();
+    meta.textContent = ts + (evt && evt.event ? '  •  ' + evt.event : '');
+    item.appendChild(meta);
+
+    var pre = document.createElement('div');
+    pre.textContent = JSON.stringify(evt, null, 2);
+    item.appendChild(pre);
+
+    eventsListEl.insertBefore(item, eventsListEl.firstChild);
+  }
+
+  document.getElementById('clearEventsBtn').addEventListener('click', function () {
+    eventsListEl.innerHTML = '';
+  });
+
+  // ---------------- CONFIG + STATE ----------------
+  var MAX_ITEMS_PER_EVENT = 20;
+  var inactivityDelayMs = 2000;
+  var inactivityCheckInterval = 250;
+
+  var buffer = [];
+  var bufferedItemIds = new Set();
+  var sentItemIds = new Set();
+  var batchCounter = 0;
+
+  var lastActivityTime = Date.now();
+  var lastActivitySource = 'none';
+
+  var bufferItemsContainer = document.getElementById('bufferItemsContainer');
+  var bufferTimerLabel = document.getElementById('bufferTimerLabel');
+  var bufferStatusText = document.getElementById('bufferStatusText');
+  var activityStatus = document.getElementById('activityStatus');
+  var flushBufferBtn = document.getElementById('flushBufferBtn');
+  var leftPane = document.getElementById('leftPane');
+  var carouselWrapper = document.getElementById('carouselWrapper');
+
+  var selectedItemIds = new Set();
+
+  // ---------------- UI helpers ----------------
+  function renderBufferUI() {
+    bufferItemsContainer.innerHTML = '';
+    if (buffer.length === 0) {
+      var empty = document.createElement('div');
+      empty.style.color = '#888';
+      empty.style.fontSize = '11px';
+      empty.textContent = 'No items buffered yet.';
+      bufferItemsContainer.appendChild(empty);
+      bufferStatusText.textContent = 'Status: waiting for items to become visible.';
+      bufferTimerLabel.textContent = 'No inactivity';
+      flushBufferBtn.disabled = true;
+      return;
+    }
+
+    buffer.forEach(function (item) {
+      var div = document.createElement('div');
+      div.className = 'buffer-item';
+      div.textContent =
+        item.item_id +
+        ' (list:' + item.item_list_id +
+        ', idx:' + item.index +
+        ', list_vpos:' + item.list_vertical_position +
+        ', buf_idx:' + item.buffer_index +
+        ', buf_size_at_add:' + item.buffer_size_at_add + ')';
+      bufferItemsContainer.appendChild(div);
+    });
+
+    bufferStatusText.textContent =
+      'Status: will send view_item_list after 2s of no activity or when buffer reaches ' +
+      MAX_ITEMS_PER_EVENT + ' items.';
+    flushBufferBtn.disabled = false;
+  }
+
+  function updateActivityUI() {
+    var now = Date.now();
+    var msSince = now - lastActivityTime;
+    var sec = (msSince / 1000).toFixed(1);
+    activityStatus.textContent =
+      'Last activity: ' + lastActivitySource + ' (' + sec + 's ago)';
+  }
+
+  function markActivity(source) {
+    lastActivityTime = Date.now();
+    lastActivitySource = source;
+    updateActivityUI();
+  }
+
+  // ---------------- Layout: list_vertical_position & index ----------------
+  function assignListPositionsAndItemIndexes() {
+    var modules = Array.from(document.querySelectorAll('.module-section'));
+    var paneRect = leftPane.getBoundingClientRect();
+
+    var moduleData = modules.map(function (mod) {
+      var rect = mod.getBoundingClientRect();
+      return {
+        element: mod,
+        top: rect.top - paneRect.top
+      };
+    });
+
+    moduleData.sort(function (a, b) { return a.top - b.top; });
+
+    moduleData.forEach(function (modData, listIdx) {
+      var moduleEl = modData.element;
+      var listVerticalPosition = listIdx + 1;
+      moduleEl.dataset.listVerticalPosition = String(listVerticalPosition);
+
+      var itemElems = moduleEl.querySelectorAll('.item-card');
+      itemElems.forEach(function (itemEl, itemIdx) {
+        itemEl.dataset.indexInList = String(itemIdx + 1);
+        itemEl.dataset.listVerticalPosition = String(listVerticalPosition);
+      });
+    });
+  }
+
+  window.addEventListener('load', assignListPositionsAndItemIndexes);
+  window.addEventListener('resize', assignListPositionsAndItemIndexes);
+
+  // ---------------- Buffer logic ----------------
+  function addItemToBufferFromElement(itemEl) {
+    var itemId = itemEl.getAttribute('data-item-id');
+    if (!itemId) return;
+
+    if (!itemEl.dataset.indexInList || !itemEl.dataset.listVerticalPosition) {
+      assignListPositionsAndItemIndexes();
+    }
+
+    if (sentItemIds.has(itemId) || bufferedItemIds.has(itemId)) {
+      return;
+    }
+
+    var moduleEl = itemEl.closest('.module-section');
+    if (!moduleEl) return;
+
+    var listId = moduleEl.getAttribute('data-item-list-id') || 'unknown_list';
+    var listName = moduleEl.getAttribute('data-item-list-name') || 'Unknown item list';
+
+    var itemName = itemEl.getAttribute('data-item-name') ||
+      (itemEl.querySelector('.item-name') && itemEl.querySelector('.item-name').textContent) ||
+      itemId;
+
+    var indexInList = Number(itemEl.dataset.indexInList || 0);
+    var listVerticalPosition = Number(itemEl.dataset.listVerticalPosition || 0);
+
+    var bufferIndex = buffer.length;
+    var newSize = bufferIndex + 1;
+
+    buffer.push({
+      item_id: itemId,
+      item_name: itemName,
+      item_list_id: listId,
+      item_list_name: listName,
+      index: indexInList,
+      list_vertical_position: listVerticalPosition,
+      buffer_index: bufferIndex,
+      buffer_size_at_add: newSize
+    });
+
+    bufferedItemIds.add(itemId);
+    renderBufferUI();
+
+    if (buffer.length >= MAX_ITEMS_PER_EVENT) {
+      sendViewItemListFromBuffer();
+    }
+  }
+
+  function clearBuffer() {
+    buffer = [];
+    bufferedItemIds.clear();
+    renderBufferUI();
+  }
+
+  // ---------------- Sending view_item_list from buffer ----------------
+  function sendViewItemListFromBuffer() {
+    if (buffer.length === 0) return;
+
+    batchCounter += 1;
+    var currentBatchId = batchCounter;
+
+    var groupsByListId = {};
+    buffer.forEach(function (item) {
+      if (!groupsByListId[item.item_list_id]) {
+        groupsByListId[item.item_list_id] = [];
+      }
+      groupsByListId[item.item_list_id].push(item);
+    });
+
+    Object.keys(groupsByListId).forEach(function (listId) {
+      var items = groupsByListId[listId];
+      items.sort(function (a, b) { return a.index - b.index; });
+
+      for (var start = 0; start < items.length; start += MAX_ITEMS_PER_EVENT) {
+        var chunk = items.slice(start, start + MAX_ITEMS_PER_EVENT);
+        var batchSize = chunk.length;
+
+        var listName = chunk[0].item_list_name;
+        var listVerticalPosition = chunk[0].list_vertical_position;
+
+        chunk.forEach(function (it) {
+          sentItemIds.add(it.item_id);
+        });
+
+        var gaItems = chunk.map(function (it) {
+          return {
+            item_id: it.item_id,
+            item_name: it.item_name,
+            item_list_id: it.item_list_id,
+            item_list_name: it.item_list_name,
+            index: it.index,
+            list_vertical_position: it.list_vertical_position,
+            buffer_index: it.buffer_index,
+            buffer_size_at_add: it.buffer_size_at_add,
+            batch_id: currentBatchId,
+            batch_size: batchSize
+          };
+        });
+
+        window.dataLayer.push({
+          event: 'view_item_list',
+          list_vertical_position: listVerticalPosition,
+          ecommerce: {
+            item_list_id: listId,
+            item_list_name: listName,
+            items: gaItems
+          }
+        });
+      }
+    });
+
+    clearBuffer();
+  }
+
+  flushBufferBtn.addEventListener('click', function () {
+    sendViewItemListFromBuffer();
+  });
+
+  // ---------------- Activity & inactivity timer ----------------
+  leftPane.addEventListener('scroll', function () {
+    markActivity('vertical-scroll');
+  }, { passive: true });
+
+  if (carouselWrapper) {
+    carouselWrapper.addEventListener('scroll', function () {
+      markActivity('carousel-scroll');
+    }, { passive: true });
+  }
+
+  leftPane.addEventListener('click', function () { markActivity('click'); });
+  leftPane.addEventListener('mousemove', function () { markActivity('mousemove'); });
+  leftPane.addEventListener('keydown', function () { markActivity('keydown'); });
+
+  setInterval(function () {
+    if (buffer.length > 0) {
+      var now = Date.now();
+      var msSinceActivity = now - lastActivityTime;
+      var remainingMs = inactivityDelayMs - msSinceActivity;
+      if (remainingMs <= 0) {
+        bufferTimerLabel.textContent = 'Sending now…';
+        sendViewItemListFromBuffer();
+        return;
+      }
+      var remainingSec = Math.ceil(remainingMs / 1000);
+      bufferTimerLabel.textContent = 'Sending in ~' + remainingSec + 's';
+    } else {
+      bufferTimerLabel.textContent = 'No inactivity';
+    }
+    updateActivityUI();
+  }, inactivityCheckInterval);
+
+  function flushOnHideOrUnload() {
+    if (buffer.length > 0) {
+      sendViewItemListFromBuffer();
+    }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      flushOnHideOrUnload();
+    }
+  });
+  window.addEventListener('pagehide', flushOnHideOrUnload);
+
+  (function setupExitIntent() {
+    var lastMouseY = null;
+    var exitIntentFired = false;
+    document.addEventListener('mousemove', function (e) {
+      if (lastMouseY !== null) {
+        var goingUp = e.clientY < lastMouseY;
+        if (!exitIntentFired && goingUp && e.clientY <= 5) {
+          exitIntentFired = true;
+          flushOnHideOrUnload();
+          setTimeout(function () { exitIntentFired = false; }, 5000);
+        }
+      }
+      lastMouseY = e.clientY;
+    }, { passive: true });
+  })();
+
+  // ---------------- IntersectionObserver: 80% visibility ----------------
+  function buildThresholdList() {
+    var thresholds = [];
+    var numSteps = 20;
+    for (var i = 0; i <= numSteps; i++) thresholds.push(i / numSteps);
+    return thresholds;
+  }
+
+  var allItemEls = Array.from(document.querySelectorAll('.item-card'));
+
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.intersectionRatio >= 0.8) {
+          addItemToBufferFromElement(entry.target);
+        }
+      });
+    }, {
+      root: leftPane,
+      threshold: buildThresholdList()
+    });
+
+    allItemEls.forEach(function (el) {
+      observer.observe(el);
+    });
+  } else {
+    allItemEls.forEach(addItemToBufferFromElement);
+  }
+
+  // ---------------- select_item on click ----------------
+  function sendSelectItem(itemEl) {
+    var itemId = itemEl.getAttribute('data-item-id');
+    if (!itemId) return;
+
+    if (selectedItemIds.has(itemId)) return;
+    selectedItemIds.add(itemId);
+
+    if (!itemEl.dataset.indexInList || !itemEl.dataset.listVerticalPosition) {
+      assignListPositionsAndItemIndexes();
+    }
+
+    var moduleEl = itemEl.closest('.module-section');
+    if (!moduleEl) return;
+
+    var listId = moduleEl.getAttribute('data-item-list-id') || 'unknown_list';
+    var listName = moduleEl.getAttribute('data-item-list-name') || 'Unknown item list';
+
+    var itemName = itemEl.getAttribute('data-item-name') ||
+      (itemEl.querySelector('.item-name') && itemEl.querySelector('.item-name').textContent) ||
+      itemId;
+
+    var indexInList = Number(itemEl.dataset.indexInList || 0);
+    var listVerticalPosition = Number(itemEl.dataset.listVerticalPosition || 0);
+
+    window.dataLayer.push({
+      event: 'select_item',
+      list_vertical_position: listVerticalPosition,
+      ecommerce: {
+        item_list_id: listId,
+        item_list_name: listName,
+        items: [{
+          item_id: itemId,
+          item_name: itemName,
+          item_list_id: listId,
+          item_list_name: listName,
+          index: indexInList,
+          list_vertical_position: listVerticalPosition
+        }]
+      }
+    });
+  }
+
+  document.querySelectorAll('.item-card .select-item-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var itemEl = btn.closest('.item-card');
+      if (!itemEl) return;
+
+      var itemId = itemEl.getAttribute('data-item-id');
+      if (itemId && !bufferedItemIds.has(itemId) && !sentItemIds.has(itemId)) {
+        addItemToBufferFromElement(itemEl);
+        sendViewItemListFromBuffer();
+      } else if (buffer.length > 0) {
+        sendViewItemListFromBuffer();
+      }
+
+      sendSelectItem(itemEl);
+    });
+  });
+
+  // ---------------- Initial events and UI ----------------
+  window.dataLayer.push({
+    event: 'page_view',
+    page_location: window.location.href,
+    page_title: document.title
+  });
+  renderBufferUI();
+  updateActivityUI();
+</script>
+</body>
+</html>
