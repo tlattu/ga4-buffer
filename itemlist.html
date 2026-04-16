@@ -75,7 +75,7 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       background: #fff;
-      max-height: calc(100vh - 280px);
+      max-height: calc(100vh - 320px);
       overflow-y: auto;
       font-size: 13px;
     }
@@ -112,6 +112,15 @@
     .timer-text, .status-text, .activity-text {
       font-size: 11px;
       color: #555;
+    }
+
+    .event-counters {
+      font-size: 12px;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    .event-counters div {
+      margin: 1px 0;
     }
   </style>
 </head>
@@ -354,6 +363,14 @@
         Clear
       </button>
     </div>
+
+    <!-- NEW: event counters -->
+    <div class="event-counters">
+      <div><strong>Event count</strong></div>
+      <div>view_item_list: <span id="cntViewItemList">0</span></div>
+      <div>select_item: <span id="cntSelectItem">0</span></div>
+    </div>
+
     <div class="events-list" id="eventsList"></div>
   </div>
 </div>
@@ -374,7 +391,26 @@
 
   var eventsListEl = document.getElementById('eventsList');
 
+  // NEW: event counters
+  var viewItemListCount = 0;
+  var selectItemCount = 0;
+  var cntViewItemListEl = document.getElementById('cntViewItemList');
+  var cntSelectItemEl = document.getElementById('cntSelectItem');
+
+  function renderEventCounters() {
+    cntViewItemListEl.textContent = String(viewItemListCount);
+    cntSelectItemEl.textContent = String(selectItemCount);
+  }
+
   function logEvent(evt) {
+    if (evt && evt.event === 'view_item_list') {
+      viewItemListCount += 1;
+      renderEventCounters();
+    } else if (evt && evt.event === 'select_item') {
+      selectItemCount += 1;
+      renderEventCounters();
+    }
+
     var item = document.createElement('div');
     item.className = 'event-item';
 
@@ -393,6 +429,10 @@
 
   document.getElementById('clearEventsBtn').addEventListener('click', function () {
     eventsListEl.innerHTML = '';
+    // Reset counters when clearing log
+    viewItemListCount = 0;
+    selectItemCount = 0;
+    renderEventCounters();
   });
 
   // ---------------- CONFIG + STATE ----------------
@@ -776,6 +816,7 @@
   });
   renderBufferUI();
   updateActivityUI();
+  renderEventCounters();
 </script>
 </body>
 </html>
